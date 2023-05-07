@@ -11,8 +11,15 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+ AnimatedSliverBox is used with CustomScrollView and is controlled with a model to insert, remove, appear or disappear the sliver. To keep animation smoothly, only the visible items are animated by removing the invisible items, unless otherwise indicated. For example the bottom of the "box with rounded corners" is not visible, but will be visible during the appeares and disappeares. The position of the first visible child is saved during layout. This makes a correction of the scrolloffset posible if children are removed above the first visible child. In this way the user will not be disorientated, to indicate a change the scrollview is sligthy moved. To accomplisch this, the performlayout of the SliverList is redesigned and is called FlexSizeSliver and this render use a model, with the following characteristics:
+ - The offset of the first visible child is saved during the layout.'
+ - If the size is known of the child, the FlexSizeSliver can unlike the SliverList skip the layout. In a webpage with a long list and scrollbars the layout can skip children for a faster layout.'
+ - The model use a property object for each child. the property object is used for holden the size, useSizeOfChild, animateOutside, transitionState, innerTransition, values, panel state, use, animation status or whatever the user like by extending the class.'
+ - If the item is garbage collected the property is notified, depending what the user likes to do it is possible for example to set the item to the default panel if the edit panel is large or a heavy widget.'
+- If desired SliverRowBox also contains a callback to ignore the pointer during the animation. During the appearence the children below the view, are added later. This is not noticed unless the user scrolls down, denpending on the duration it is not likely that the user is fast enough.'
+ - The model is divided in submodels, for example a top, one or more middle list and a bottom. Also the list can be replace by another, with an animation, if the list is for example date depended or you like a alternive for tabbar in slivers.'
+ - The model will give a feedback if an action is prevented by a running animation for example.'
+- The model can use group and single animations, single animations are not blocked.',
 
 ## Features
 

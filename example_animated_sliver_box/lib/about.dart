@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -47,14 +47,14 @@ class About extends StatelessWidget {
                     'The position of the first visible child is saved during layout. This makes a correction of the scrolloffset posible if children are removed above the first visible child. '
                     'In this way the user will not be disorientated, to indicate a change the scrollview is sligthy moved. '
                     'To accomplisch this, the performlayout of the SliverList is redesigned and is called FlexSizeSliver and this render use a model, with the following characteristics:\n'
-                    ' The offset of the first visible child is saved during the layout.\n'
-                    ' If the height is known of the child, the FlexheightSliver can unlike the SliverList skip the layout. In a webpage with a long list and scrollbars the layout can skip children for a faster layout.\n'
-                    ' The model use a property object for each child. the property object is used for holden the height, useHeightOfChild, animateOutside, transitionState, innerTransition, values, panel state, use, animation status or whatever the user like by extending the class.\n'
-                    ' If the item is garbage collected the property is notified, depending what the user likes to do it is possible for example to set the item to the default panel if the edit panel is large or a heavy widget.\n'
-                    ' If desired SliverRowBox also contains a callback to ignore the pointer during the animation. During the appearence the children below the view, are added later. This is not noticed unless the user scrolls down, denpending on the duration it is not likely that the user is fast enough.\n'
-                    ' The model is divided in submodels, for example a top, one or more middle list and a bottom. Also the list can be replace by another, with an animation, if the list is for example date depended or you like a alternive for tabbar in slivers.\n'
-                    ' The model will give a feedback if an action is prevented by a running animation for example.\n'
-                    ' The model can use group and single animations, single animations are not blocked.\n',
+                    '- The offset of the first visible child is saved during the layout.\n'
+                    '- If the size is known of the child, the FlexSizeSliver can unlike the SliverList skip the layout. In a webpage with a long list and scrollbars the layout can skip children for a faster layout.\n'
+                    '- The model use a property object for each child. the property object is used for holden the size, useSizeOfChild, animateOutside, transitionState, innerTransition, values, panel state, use, animation status or whatever the user like by extending the class.\n'
+                    '- If the item is garbage collected the property is notified, depending what the user likes to do it is possible for example to set the item to the default panel if the edit panel is large or a heavy widget.\n'
+                    '- If desired SliverRowBox also contains a callback to ignore the pointer during the animation. During the appearence the children below the view, are added later. This is not noticed unless the user scrolls down, denpending on the duration it is not likely that the user is fast enough.\n'
+                    '- The model is divided in submodels, for example a top, one or more middle list and a bottom. Also the list can be replace by another, with an animation, if the list is for example date depended or you like a alternive for tabbar in slivers.\n'
+                    '- The model will give a feedback if an action is prevented by a running animation for example.\n'
+                    '- The model can use group and single animations, single animations are not blocked.\n',
                 style: TextStyle(fontSize: paragraphSize, color: Colors.black),
                 children: [
                   TextSpan(
