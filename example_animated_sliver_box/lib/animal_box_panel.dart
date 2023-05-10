@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,12 +19,12 @@ import 'package:animated_sliver_box/animated_sliver_box.dart';
 import 'package:animated_sliver_box/animated_sliver_box_goodies/sliver_box_background.dart';
 import 'package:animated_sliver_box/animated_sliver_box_goodies/sliver_box_resize_switcher.dart';
 import 'package:animated_sliver_box/animated_sliver_box_goodies/sliver_box_transfer_widget.dart';
-import 'package:animated_sliver_box/sliver_row_box_model.dart';
+import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'animal_box_state.dart';
-import 'animal_sliver_box_properties.dart';
-import 'animal_sliver_row_box_model.dart';
+import 'animal_sliver_properties.dart';
+import 'animal_sliver_box_model.dart';
 import 'backdrop/animal_suggestion_state.dart';
 
 class AnimalsAtoZ extends ConsumerStatefulWidget {
@@ -49,10 +49,11 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
     return AnimatedSliverBox<AnimalSliverBoxModel>(
         controllerSliverRowBox: animalBox.controllerSliverBox,
         createSliverRowBoxModel: createModel(animalBox),
-        updateSliverRowBoxModel: (AnimalSliverBoxModel model) {
+        updateSliverRowBoxModel: (AnimalSliverBoxModel model, Axis axis) {
           model
             ..topBox.buildStateItem = _buildTop
-            ..bottomBox.buildStateItem = _buildBottom;
+            ..bottomBox.buildStateItem = _buildBottom
+            ..axis = axis;
 
           for (var element in model.animalBoxList) {
             element.buildStateItem = _buildAnimal;
@@ -62,8 +63,10 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
 
   CreateSliverRowBoxModel<AnimalSliverBoxModel> createModel(
           AnimalBox animalBox) =>
-      (AnimatedSliverBoxState<AnimalSliverBoxModel> sliverBoxContext) =>
+      (AnimatedSliverBoxState<AnimalSliverBoxModel> sliverBoxContext,
+              Axis axis) =>
           AnimalSliverBoxModel(
+              duration: const Duration(milliseconds: 500),
               sliverBoxContext: sliverBoxContext,
               topBox: SingleBoxModel<String, BoxItemProperties>(
                   tag: 'top',
@@ -76,6 +79,7 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
               ),
               animalBoxList: [
                 SingleBoxModel<String, AnimalSliverBoxProperties>(
+                    duration: const Duration(milliseconds: 500),
                     tag: animalBox.selectedZoo.contains('Emmen')
                         ? 'Emmen'
                         : 'Ouwehands',
@@ -83,7 +87,8 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
                         ? animalBox.animalBoxOne
                         : animalBox.animalBoxTwo,
                     buildStateItem: _buildAnimal)
-              ]);
+              ],
+              axis: axis);
 
   Widget _buildTop(
       {required BuildContext buildContext,
@@ -149,21 +154,24 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
             boxItemProperties: properties,
             model: model,
             singleBoxModel: singleBoxModel,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Center(
-                child: Material(
-                  color: const Color(0xFFE3C770),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0)),
-                  child: InkWell(
-                    onTap: add,
-                    child: const Padding(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                      child: Text(
-                        'add',
-                        style: TextStyle(fontSize: 18.0),
+            child: SizedBox(
+              height: animalBottom,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Material(
+                    color: const Color.fromARGB(255, 103, 134, 60),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.0)),
+                    child: InkWell(
+                      onTap: add,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        child: Text(
+                          'Add',
+                          style: TextStyle(fontSize: 18.0, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
@@ -270,7 +278,6 @@ class _AnimalsAtoZState extends ConsumerState<AnimalsAtoZ> {
     ref.read(animalBoxProvider.notifier).insert(
         AnimalSliverBoxProperties(
           id: 'newAnimal_${newAnimal++}',
-          size: animalHeightNormal,
           panel: AnimalPanels.normal,
           toPanel: AnimalPanels.edit,
           single: false,
@@ -316,7 +323,7 @@ class Animal extends StatelessWidget {
     final theme = Theme.of(context);
     final empty = properties.value.name.isEmpty;
     return SizedBox(
-        height: properties.size,
+        height: animalHeightNormal,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -384,7 +391,7 @@ class _EditAnimalState extends ConsumerState<EditAnimal> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 460.0,
+      height: animalHeightEdit,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         child: Material(

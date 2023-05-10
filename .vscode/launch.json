@@ -40,6 +40,19 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
-        }
+        },
+        {
+            "name": "example_resize_animated_sliver_box",
+            "cwd": "example_resize_animated_sliver_box",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "example_resize_animated_sliver_box (profile mode)",
+            "cwd": "example_resize_animated_sliver_box",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
     ]
 }

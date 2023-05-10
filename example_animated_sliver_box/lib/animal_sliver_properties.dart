@@ -1,22 +1,23 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:animated_sliver_box/animated_sliver_box.dart';
+import 'package:flutter/widgets.dart';
 
 import 'animal_box_state.dart';
 import 'backdrop/animal_suggestion_state.dart';
@@ -26,7 +27,7 @@ const animalHeightEdit = 460.0;
 const animalTop = 128.0;
 const animalBottom = 64.0;
 
-const animalHeightSuggestion = 64.0;
+const animalHeightSuggestion = 48.0;
 
 class AnimalSliverBoxProperties extends BoxItemProperties {
   AnimalPanels panel;
@@ -38,7 +39,6 @@ class AnimalSliverBoxProperties extends BoxItemProperties {
   AnimalSliverBoxProperties(
       {super.transitionStatus = BoxItemTransitionState.visible,
       required super.id,
-      required super.size,
       required this.panel,
       this.toPanel,
       super.single = false,
@@ -54,11 +54,6 @@ class AnimalSliverBoxProperties extends BoxItemProperties {
     toPanel = null;
     panel = to;
     innerTransition = false;
-    if (panel == AnimalPanels.normal) {
-      size = animalHeightNormal;
-    } else {
-      size = animalHeightEdit;
-    }
   }
 
   setToPanel(AnimalPanels? panel) {
@@ -76,23 +71,39 @@ class AnimalSliverBoxProperties extends BoxItemProperties {
   }
 
   @override
-  void garbageCollected() {
+  void garbageCollected(Axis axis) {
     if (aliveOutsideView) return;
 
     panel = AnimalPanels.normal;
     toPanel = null;
     innerTransition = false;
-    size = animalHeightNormal;
   }
+
+  @override
+  double size(Axis axis) {
+    return panel == AnimalPanels.normal ? animalHeightNormal : animalHeightEdit;
+  }
+
+  @override
+  bool useSizeOfChild(Axis axis) => true;
 }
 
 class AnimalSuggestionSliverBoxProperties extends BoxItemProperties {
   AnimalSuggestionItem value;
+  final double _size;
 
   AnimalSuggestionSliverBoxProperties({
     super.transitionStatus = BoxItemTransitionState.visible,
     required super.id,
-    required super.size,
+    required double size,
     required this.value,
-  });
+  }) : _size = size;
+
+  @override
+  double size(Axis axis) {
+    return _size;
+  }
+
+  @override
+  bool useSizeOfChild(Axis axis) => true;
 }

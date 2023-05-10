@@ -1,29 +1,29 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
 import 'package:animated_sliver_box/animated_sliver_box.dart';
+import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:animated_sliver_box/sliver_box_controller.dart';
-import 'package:animated_sliver_box/sliver_row_box_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'animal_az_list.dart';
-import 'animal_sliver_box_properties.dart';
-import 'animal_sliver_row_box_model.dart';
+import 'animal_sliver_properties.dart';
+import 'animal_sliver_box_model.dart';
 
 enum AnimalPanels { normal, edit }
 
@@ -65,7 +65,6 @@ class AnimalBoxNotifier extends StateNotifier<AnimalBox> {
               for (String name in insert)
                 AnimalSliverBoxProperties(
                   id: '${name}_$color',
-                  size: animalHeightNormal,
                   transitionStatus: BoxItemTransitionState.insert,
                   panel: AnimalPanels.normal,
                   value: AnimalBoxItem(name: name, color: color),
@@ -160,62 +159,48 @@ class AnimalBoxNotifier extends StateNotifier<AnimalBox> {
 
   changeZoo(Set<String> selected) {
     String add;
-    String remove;
+
     if (selected.contains('Emmen')) {
       add = 'Emmen';
-      remove = 'Ouwehands';
     } else {
       add = 'Ouwehands';
-      remove = 'Emmen';
     }
-    state.controllerSliverBox.feedBackTryModel((AnimalSliverBoxModel model) {
-      for (SingleBoxModel<String, AnimalSliverBoxProperties> single
-          in model.animalBoxList) {
-        //Feed list to dispose
-        //
-        if (single.sliverBoxAction != SliverBoxAction.dispose &&
-            single.tag == remove) {
-          final feedback = model.changeGroups(
-            changeSingleBoxModels: [
-              ChangeSingleModel(single, (list) {
-                for (var p in list) {
-                  p.transitionStatus = BoxItemTransitionState.disappear;
-                }
-              }, SliverBoxAction.dispose),
-            ],
-            checkAllGroups: false,
-          );
 
-          if (feedback != SliverBoxRequestFeedBack.accepted) {
-            return feedback;
-          }
-        }
-      }
-      //New List
-      //
+    final addModel = SingleBoxModel<String, AnimalSliverBoxProperties>(
+        tag: add,
+        items: selected.contains('Emmen')
+            ? state.animalBoxOne
+            : state.animalBoxTwo);
 
-      final addModel = SingleBoxModel<String, AnimalSliverBoxProperties>(
-          tag: add,
-          items: selected.contains('Emmen')
-              ? state.animalBoxOne
-              : state.animalBoxTwo);
-      model.animalBoxList.insert(0, addModel);
+    final feedback = state.controllerSliverBox
+        .feedBackTryModel((AnimalSliverBoxModel model) {
+      final feedback = model.changeGroups(
+          changeSingleBoxModels: [
+            ChangeSingleModel(addModel, (list) {
+              for (var p in list) {
+                p.transitionStatus = BoxItemTransitionState.appear;
+              }
+            }, SliverBoxAction.appear),
+            for (SingleBoxModel<String, AnimalSliverBoxProperties> single
+                in model.animalBoxList)
+              if (single.sliverBoxAction != SliverBoxAction.dispose)
+                ChangeSingleModel(single, (list) {
+                  for (var p in list) {
+                    p.transitionStatus = BoxItemTransitionState.disappear;
+                  }
+                }, SliverBoxAction.dispose),
+          ],
+          checkAllGroups: false,
+          insertModel: () {
+            model.animalBoxList.insert(0, addModel);
+          });
 
-      model.changeGroups(
-        changeSingleBoxModels: [
-          ChangeSingleModel(addModel, (list) {
-            for (var p in list) {
-              p.transitionStatus = BoxItemTransitionState.appear;
-            }
-          }, SliverBoxAction.appear)
-        ],
-        checkAllGroups: false,
-      );
-
-      return SliverBoxRequestFeedBack.accepted;
+      return feedback;
     });
 
-    state = state.copyWith(selectedZoo: selected);
+    if (feedback == SliverBoxRequestFeedBack.accepted) {
+      state = state.copyWith(selectedZoo: selected);
+    }
   }
 }
 
@@ -240,13 +225,13 @@ class AnimalBox {
   AnimalBox.from(List<String> names)
       : visible = true,
         topBox = [
-          BoxItemProperties(
+          DefaultBoxItemProperties(
             id: 'top',
             size: animalTop,
           )
         ],
         bottomBox = [
-          BoxItemProperties(
+          DefaultBoxItemProperties(
               id: 'bottom', size: animalBottom, animateOutside: true)
         ],
         animalBoxOne = itemsFromNames(names),
@@ -271,7 +256,6 @@ class AnimalBox {
 
         list.add(AnimalSliverBoxProperties(
           id: a.key,
-          size: animalHeightNormal,
           value: a,
           panel: AnimalPanels.normal,
         ));

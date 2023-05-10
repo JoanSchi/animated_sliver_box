@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -50,12 +50,15 @@ typedef BuildStateItem<Tag, P extends BoxItemProperties> = Widget Function(
 abstract class AnimatedSliverBoxModel<Tag> {
   AnimatedSliverBoxState? sliverBoxContext;
   final Animatable<double> animatable;
+  Axis axis;
+
   Duration duration;
 
   AnimatedSliverBoxModel(
       {required this.sliverBoxContext,
       Animatable<double>? animatable,
-      this.duration = const Duration(milliseconds: 300)})
+      required this.duration,
+      required this.axis})
       : animatable = animatable ?? CurveTween(curve: Curves.easeInOut);
 
   int get length => iterator().fold<int>(
@@ -124,7 +127,8 @@ abstract class AnimatedSliverBoxModel<Tag> {
       required bool checkAllGroups,
       SliverBoxAction groupModelAction = SliverBoxAction.none,
       Animatable<double>? animatable,
-      bool animateInsertDeleteAbove = true}) {
+      bool animateInsertDeleteAbove = true,
+      VoidCallback? insertModel}) {
     //
     // Feedback check
     //
@@ -142,14 +146,17 @@ abstract class AnimatedSliverBoxModel<Tag> {
     // Evaluation
     //
     //
+    insertModel?.call();
 
     evaluateState(
       modelsToEvaluate: changeSingleBoxModels,
       changeSliverProperties: changeGroupModelProperties,
       animateInsertDeleteAbove: animateInsertDeleteAbove,
       sliverBoxAction: groupModelAction,
-      evaluatedModel: (SingleBoxModel single, bool animation,
-          SliverBoxAction sliverBoxAction) {
+      changeModel: (
+          {required SingleBoxModel single,
+          required bool animation,
+          required SliverBoxAction sliverBoxAction}) {
         SliverBoxActivity activity;
         if (animation) {
           activity = AnimatedSliverBoxActivity(
@@ -158,7 +165,7 @@ abstract class AnimatedSliverBoxModel<Tag> {
               model: this,
               singleBoxModel: single,
               vsync: sliverBoxContext!,
-              duration: duration)
+              duration: single.duration ?? duration)
             ..changeGroup(sliverBoxAction: sliverBoxAction);
         } else {
           activity = OutsideSliverBoxActivity(
@@ -238,14 +245,18 @@ abstract class AnimatedSliverBoxModel<Tag> {
       final Function(List<BoxItemProperties> list, Tag tag)?
           changeSliverProperties,
       SliverBoxAction sliverBoxAction = SliverBoxAction.none,
-      required Function(SingleBoxModel single, bool animation,
-              SliverBoxAction sliverBoxAction)
-          evaluatedModel,
+      required Function(
+              {required SingleBoxModel single,
+              required bool animation,
+              required SliverBoxAction sliverBoxAction})
+          changeModel,
       required bool animateInsertDeleteAbove}) {
     FlexSizeRenderSliverList? r = sliverBoxContext?.context.findRenderObject()
         as FlexSizeRenderSliverList?;
     double scrollOffset = r?.constraints.scrollOffset ?? 0.0;
     double viewportSize = r?.constraints.viewportMainAxisExtent ?? 0.0;
+    assert((r?.constraints.axis ?? axis) == axis,
+        'Axis from AnimatedSliverBox $axis is not equal to CustomScrollview: ${r?.constraints.axis} ');
     // debugPrint(
     //     'Evaluate scrollOffset: $scrollOffset, viewportHeight: $viewportHeight');
 
@@ -255,9 +266,11 @@ abstract class AnimatedSliverBoxModel<Tag> {
     double removeEnd = 0.0;
     double correct = 0.0;
 
-    FirstVisual? firstVisual = r?.firstVisual;
+    //If somehow the layout is not triggered the newLengthToVisual should set to -1 again.
+    FirstVisual? firstVisual = r?.firstVisual?..newLengthToVisual = -1;
     bool searchFirstVisual = true;
     int newLengthToVisual = 0;
+    double virtualOffset = -(firstVisual?.overflow ?? 0.0);
 
     bool evaluateList({required List<BoxItemProperties> list}) {
       bool animationVisible = false;
@@ -265,7 +278,7 @@ abstract class AnimatedSliverBoxModel<Tag> {
       int i = 0;
       while (i < count) {
         final item = list[i];
-        final itemSize = item.size;
+        final itemSize = item.size(axis);
         bool removed = false;
 
         if (searchFirstVisual) {
@@ -280,6 +293,18 @@ abstract class AnimatedSliverBoxModel<Tag> {
 
         if (searchFirstVisual) {
           switch (item.transitionStatus) {
+            case BoxItemTransitionState.insertFront:
+              {
+                if (virtualOffset + insertEnd < viewportSize) {
+                  insertEnd += itemSize;
+                  newLengthToVisual++;
+                } else {
+                  item.transitionStatus = BoxItemTransitionState.insertLater;
+                }
+                animationVisible = true;
+
+                break;
+              }
             case BoxItemTransitionState.appear:
             case BoxItemTransitionState.insert:
               {
@@ -383,6 +408,20 @@ abstract class AnimatedSliverBoxModel<Tag> {
                 animationVisible = true;
               }
               break;
+            case BoxItemTransitionState.insertFront:
+              {
+                if (virtualOffset + insertEnd < viewportSize) {
+                  insertEnd += itemSize;
+                  newLengthToVisual++;
+                } else {
+                  item.transitionStatus = BoxItemTransitionState.insertLater;
+                }
+                animationVisible = true;
+
+                debugPrint(
+                    'Insert front after visual is dectected should not happen.');
+                break;
+              }
           }
           // debugPrint('count: $count ${item.transitionStatus}');
         }
@@ -399,12 +438,12 @@ abstract class AnimatedSliverBoxModel<Tag> {
     if (modelsToEvaluate == null) {
       for (SingleBoxModel single in iterator()) {
         changeSliverProperties!.call(single.items, single.tag);
-        evaluatedModel(
-            single,
-            evaluateList(
+        changeModel(
+            single: single,
+            animation: evaluateList(
               list: single.items,
             ),
-            sliverBoxAction);
+            sliverBoxAction: sliverBoxAction);
       }
     } else {
       for (SingleBoxModel single in iterator()) {
@@ -415,10 +454,11 @@ abstract class AnimatedSliverBoxModel<Tag> {
           final changeSingleModel = modelsToEvaluate[index]
             ..changeSliverProperties();
 
-          evaluatedModel(
-              single,
-              evaluateList(list: changeSingleModel.singleBoxModel.items),
-              changeSingleModel.sliverBoxAction);
+          changeModel(
+              single: single,
+              animation:
+                  evaluateList(list: changeSingleModel.singleBoxModel.items),
+              sliverBoxAction: changeSingleModel.sliverBoxAction);
 
           modelsToEvaluate.removeAt(index);
 
@@ -442,15 +482,6 @@ abstract class AnimatedSliverBoxModel<Tag> {
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut);
       }
-    }
-
-    if (animateInsertDeleteAbove &&
-        correct != 0.0 &&
-        sliverBoxContext != null) {
-      // final position = Scrollable.of(sliverRowBoxContext!.context).position;
-
-      // position.animateTo(position.pixels + (correct > 0.0 ? -30 : 30),
-      //     duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
     }
   }
 
@@ -484,8 +515,41 @@ abstract class AnimatedSliverBoxModel<Tag> {
     sliverBoxContext = null;
   }
 
-  setIgnorePointer(bool ignore) {
+  void setIgnorePointer(bool ignore) {
     sliverBoxContext?.widget.ignorePointerCallback?.call(ignore);
+  }
+
+  static void resetBoxProperties(List<BoxItemProperties> items) {
+    items.removeWhere((element) {
+      bool remove = false;
+      switch (element.transitionStatus) {
+        case BoxItemTransitionState.visible:
+          break;
+        case BoxItemTransitionState.appear:
+        case BoxItemTransitionState.insertLater:
+        case BoxItemTransitionState.insert:
+        case BoxItemTransitionState.insertFront:
+          element.transitionStatus = BoxItemTransitionState.visible;
+          break;
+
+        case BoxItemTransitionState.invisible:
+          break;
+        case BoxItemTransitionState.disappear:
+          element.transitionStatus = BoxItemTransitionState.invisible;
+          break;
+        case BoxItemTransitionState.remove:
+          remove = true;
+          break;
+      }
+      return remove;
+    });
+  }
+
+  FirstVisual? firstVisual() {
+    FlexSizeRenderSliverList? r = sliverBoxContext?.context.findRenderObject()
+        as FlexSizeRenderSliverList?;
+
+    return r?.firstVisual;
   }
 }
 
@@ -512,12 +576,13 @@ class SingleBoxModel<Tag, P extends BoxItemProperties> {
 
   int get individualTransition => _individualTransition;
 
-  SingleBoxModel(
-      {required this.tag,
-      this.sliverBoxAction = SliverBoxAction.none,
-      required this.items,
-      this.buildStateItem,
-      this.duration}) {
+  SingleBoxModel({
+    required this.tag,
+    this.sliverBoxAction = SliverBoxAction.none,
+    required this.items,
+    this.buildStateItem,
+    this.duration,
+  }) {
     evaluateVisibleItems();
   }
 
@@ -532,40 +597,18 @@ class SingleBoxModel<Tag, P extends BoxItemProperties> {
     ];
   }
 
-  void reset() {
-    items.removeWhere((element) {
-      bool remove = false;
-      switch (element.transitionStatus) {
-        case BoxItemTransitionState.visible:
-          break;
-        case BoxItemTransitionState.appear:
-        case BoxItemTransitionState.insertLater:
-        case BoxItemTransitionState.insert:
-          element.transitionStatus = BoxItemTransitionState.visible;
-          break;
-
-        case BoxItemTransitionState.invisible:
-          break;
-        case BoxItemTransitionState.disappear:
-          element.transitionStatus = BoxItemTransitionState.invisible;
-          break;
-        case BoxItemTransitionState.remove:
-          remove = true;
-          break;
-      }
-      return remove;
-    });
-    evaluateVisibleItems();
-    sliverBoxAction = SliverBoxAction.none;
-  }
-
   Widget build(
       {required BuildContext context,
       required AnimatedSliverBoxModel<Tag> model,
       required int index}) {
     return buildStateItem == null
         ? SizedBox(
-            height: this.visibleItems[index].size,
+            height: model.axis == Axis.vertical
+                ? this.visibleItems[index].size(Axis.vertical)
+                : null,
+            width: model.axis == Axis.horizontal
+                ? this.visibleItems[index].size(Axis.horizontal)
+                : null,
             child: ErrorWidget(
                 'Oops no build found, add a build directly or with the function updateSliverRowBoxModel!'))
         : buildStateItem!.call(
@@ -578,9 +621,7 @@ class SingleBoxModel<Tag, P extends BoxItemProperties> {
   }
 
   dispose() {
-    if (_activity != const NoSliverBoxActivity()) {
-      reset();
-    }
+    if (_activity != const NoSliverBoxActivity()) {}
     setActivity(const NoSliverBoxActivity());
   }
 }

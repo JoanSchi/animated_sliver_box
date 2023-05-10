@@ -1,31 +1,33 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
 import 'package:animated_sliver_box/animated_sliver_box.dart';
+import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:animated_sliver_box/sliver_box_controller.dart';
-import 'package:animated_sliver_box/sliver_row_box_model.dart';
-import 'animal_sliver_box_properties.dart';
+import 'animal_sliver_properties.dart';
 
 class AnimalSliverBoxModel extends AnimatedSliverBoxModel<String> {
   AnimalSliverBoxModel(
       {required super.sliverBoxContext,
       required this.topBox,
       required this.animalBoxList,
-      required this.bottomBox});
+      required this.bottomBox,
+      required super.axis,
+      required super.duration});
   SingleBoxModel<String, BoxItemProperties> topBox;
   List<SingleBoxModel<String, AnimalSliverBoxProperties>> animalBoxList;
   SingleBoxModel<String, BoxItemProperties> bottomBox;
@@ -116,6 +118,8 @@ class SuggestedAnimalSliverBoxModel extends AnimatedSliverBoxModel<String> {
   SuggestedAnimalSliverBoxModel({
     required super.sliverBoxContext,
     required this.suggestedAnimalBox,
+    required super.axis,
+    required super.duration,
   });
 
   SingleBoxModel<String, AnimalSuggestionSliverBoxProperties>

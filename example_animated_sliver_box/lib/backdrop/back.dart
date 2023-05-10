@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,12 +19,12 @@ import 'dart:async';
 import 'package:animated_sliver_box/animated_sliver_box.dart';
 import 'package:animated_sliver_box/animated_sliver_box_goodies/sliver_box_background.dart';
 import 'package:animated_sliver_box/animated_sliver_box_goodies/sliver_box_transfer_widget.dart';
-import 'package:animated_sliver_box/sliver_row_box_model.dart';
+import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../animal_box_state.dart';
-import '../animal_sliver_box_properties.dart';
-import '../animal_sliver_row_box_model.dart';
+import '../animal_sliver_properties.dart';
+import '../animal_sliver_box_model.dart';
 import 'animal_suggestion_state.dart';
 import 'backdrop_state.dart';
 
@@ -73,15 +73,17 @@ class _BackState extends ConsumerState<Back> {
                   slivers: [
                     AnimatedSliverBox<SuggestedAnimalSliverBoxModel>(
                       controllerSliverRowBox: a.sliverBoxController,
-                      createSliverRowBoxModel: (sliverRowBoxContext) =>
+                      createSliverRowBoxModel: (sliverRowBoxContext, axis) =>
                           SuggestedAnimalSliverBoxModel(
+                              duration: const Duration(milliseconds: 300),
                               sliverBoxContext: sliverRowBoxContext,
+                              axis: axis,
                               suggestedAnimalBox: SingleBoxModel(
                                   tag: '',
                                   items: a.suggestedAnimalBox,
                                   buildStateItem: _build)),
                       updateSliverRowBoxModel:
-                          (SuggestedAnimalSliverBoxModel model) {
+                          (SuggestedAnimalSliverBoxModel model, Axis axis) {
                         model.suggestedAnimalBox.buildStateItem = _build;
                       },
                     )
@@ -181,22 +183,25 @@ class _BackState extends ConsumerState<Back> {
           singleBoxModel: singleBoxModel,
           animation: animation,
           boxItemProperties: properties,
-          child: Row(children: [
-            const SizedBox(
-              width: 8.0,
-            ),
-            Checkbox(
-                value: properties.value.selected,
-                onChanged: (bool? value) {
-                  setState(() {
-                    properties.value.selected = value!;
-                  });
-                }),
-            const SizedBox(
-              width: 8.0,
-            ),
-            Text(properties.value.name),
-          ])),
+          child: SizedBox(
+            height: animalHeightSuggestion,
+            child: Row(children: [
+              const SizedBox(
+                width: 8.0,
+              ),
+              Checkbox(
+                  value: properties.value.selected,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      properties.value.selected = value!;
+                    });
+                  }),
+              const SizedBox(
+                width: 8.0,
+              ),
+              Text(properties.value.name),
+            ]),
+          )),
     );
   }
 }

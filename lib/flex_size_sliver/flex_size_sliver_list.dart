@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import '../animated_sliver_box.dart';
-import '../sliver_row_box_model.dart';
+import '../animated_sliver_box_model.dart';
 import 'flex_size_multi_box_adaptor.dart';
 import 'flex_size_sliver.dart';
 import 'flex_size_tracker.dart';
@@ -103,7 +103,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
     required BoxItemProperties boxItemProperties,
     required FlexSizeLayoutTracker layoutBoxTracker,
   }) {
-    double? flexSize = boxItemProperties.flexSize;
+    double? flexSize = boxItemProperties.flexSize(constraints.axis);
     RenderBox? box;
 
     if (flexSize != null && layoutBoxTracker.skipChild(flexSize)) {
@@ -133,6 +133,12 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
       final childParentData = box.parentData! as FlexSizeSliverParentData;
 
       layoutBoxTracker.setSizeAndOffset(flexSize, childParentData);
+
+      assert(() {
+        double? fl = boxItemProperties.flexSize(constraints.axis);
+        return (fl == null || fl == flexSize);
+      }(),
+          'Index: ${layoutBoxTracker.index}: Size check flexSize is not null, therefore the size ${boxItemProperties.flexSize(constraints.axis)} should be equal to the measured size $flexSize. The direction is ${constraints.axis}, boxItemProperties id: ${boxItemProperties.id})');
 
       return (layoutBoxTracker.forward
               ? childParentData.nextSibling
@@ -214,6 +220,9 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
     if (firstVisual?.relayout ?? false) {
       final leading = Edge.empty();
 
+      assert(firstVisual!.newLengthToVisual <= model.length,
+          'Visual length: ${firstVisual!.newLengthToVisual} should never be larger than total length ${model.length}');
+
       ForwardTracker(
         childConstraints: childConstraints,
         render: this,
@@ -233,25 +242,25 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
       FlexSizeSliverParentData childParent =
           firstChild!.parentData as FlexSizeSliverParentData;
 
-      assert(indexOf(firstChild!) == leading.index,
-          'FirstVisuable index is different leading index ${leading.index} and child ${indexOf(firstChild!)}');
+      // assert(indexOf(firstChild!) == leading.index,
+      //     'FirstVisuable index is different leading index ${leading.index} and child ${indexOf(firstChild!)}');
 
       assert(childParent.layoutOffset != null,
           'FirstVisuable layoutOffset first offset is null');
 
-      final newScrollOffset = childParent.layoutOffset! + firstVisual!.overflow;
+      final newScrollOffset = leading.start + firstVisual!.overflow;
 
       assert(
           firstVisual!.boxItemProperties == model.getProperties(leading.index),
-          'SliverboxItemProperties komt niet overeen leading index: ${leading.index}: ${model.getProperties(leading.index).id}, '
-          'New length FirstVisual: ${firstVisual?.newLengthToVisual}: ${firstVisual?.boxItemProperties?.id} oldIndex ${firstVisual?.index}');
+          'SliverboxItemProperties komt niet overeen leading index: ${leading.index}, id firstVisual: ${firstVisual?.boxItemProperties?.id} id getProperties: ${model.getProperties(leading.index).id}, '
+          'New length FirstVisual: ${firstVisual?.newLengthToVisual},  oldIndex: ${firstVisual?.index}');
+
+      //Break
+      firstVisual = null;
 
       if (newScrollOffset != visualScrollOffset) {
         geometry = SliverGeometry(
             scrollOffsetCorrection: -visualScrollOffset + newScrollOffset);
-
-        //Break
-        firstVisual = null;
 
         return;
       } else {
@@ -422,7 +431,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
 
   @override
   void garbageCollectedIndex(int index) {
-    model.getProperties(index).garbageCollected();
+    model.getProperties(index).garbageCollected(constraints.axis);
   }
 
   // void performLayoutOriginal() {

@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -60,6 +60,7 @@ class SliverBoxScaleResized extends StatelessWidget {
     switch (sliverBoxItemProperties.transitionStatus) {
       case BoxItemTransitionState.insert:
       case BoxItemTransitionState.appear:
+      case BoxItemTransitionState.insertFront:
         {
           scale = forwardValue;
           break;
@@ -97,12 +98,12 @@ class SliverBoxScaleResized extends StatelessWidget {
   }
 }
 
-class ScaleResized extends StatelessWidget {
+class SliverBoxScaleAndResize extends StatelessWidget {
   /// Creates a scale transition.
   ///
   /// The [scale] argument must not be null. The [alignment] argument defaults
   /// to [Alignment.center].
-  const ScaleResized({
+  const SliverBoxScaleAndResize({
     Key? key,
     required this.value,
     this.alignment = Alignment.center,
@@ -141,7 +142,10 @@ class _ResizeToScale extends SingleChildRenderObjectWidget {
 
   @override
   ScaleResizedRender createRenderObject(BuildContext context) {
-    return ScaleResizedRender(scaleX: scaleX, scaleY: scaleY);
+    return ScaleResizedRender(
+      scaleX: scaleX,
+      scaleY: scaleY,
+    );
   }
 
   @override
@@ -211,9 +215,15 @@ class ScaleResizedRender extends RenderShiftedBox {
     Size originalSize;
     if (child != null) {
       child!.layout(constraints, parentUsesSize: true);
-      final double height = child!.size.height;
 
-      originalSize = Size(constraints.maxWidth, height);
+      if (constraints.hasBoundedWidth) {
+        originalSize = Size(constraints.maxWidth, child!.size.height);
+      } else if (constraints.hasBoundedHeight) {
+        originalSize = Size(child!.size.width, constraints.maxHeight);
+      } else {
+        throw Exception(
+            'ScaleResizedRender: Width and height are infinite, either the heigth or the widht needs a bounded size.!');
+      }
 
       final scaledSize =
           Size(originalSize.width * scaleX, originalSize.height * scaleY);

@@ -52,7 +52,7 @@ class About extends StatelessWidget {
                     '- The model use a property object for each child. the property object is used for holden the size, useSizeOfChild, animateOutside, transitionState, innerTransition, values, panel state, use, animation status or whatever the user like by extending the class.\n'
                     '- If the item is garbage collected the property is notified, depending what the user likes to do it is possible for example to set the item to the default panel if the edit panel is large or a heavy widget.\n'
                     '- If desired SliverRowBox also contains a callback to ignore the pointer during the animation. During the appearence the children below the view, are added later. This is not noticed unless the user scrolls down, denpending on the duration it is not likely that the user is fast enough.\n'
-                    '- The model is divided in submodels, for example a top, one or more middle list and a bottom. Also the list can be replace by another, with an animation, if the list is for example date depended or you like a alternive for tabbar in slivers.\n'
+                    '- The model is divided in submodels, for example a top, one or more middle list and a bottom. Also the list can be replace by another, with an animation, if the list is for example date depended or sorted, or you can use it like a alternive for tabbar in slivers.\n'
                     '- The model will give a feedback if an action is prevented by a running animation for example.\n'
                     '- The model can use group and single animations, single animations are not blocked.\n',
                 style: TextStyle(fontSize: paragraphSize, color: Colors.black),

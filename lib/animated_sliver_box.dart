@@ -1,28 +1,29 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
 library animated_sliver_box;
 
-import 'package:animated_sliver_box/sliver_row_box_model.dart';
+import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:flutter/material.dart';
 import 'flex_size_sliver/flex_size_sliver_list.dart';
 import 'sliver_box_controller.dart';
 
 enum BoxItemTransitionState {
+  insertFront,
   insert,
   visible,
   remove,
@@ -37,10 +38,10 @@ enum SliverBoxAction { animate, appear, disappear, dispose, none }
 typedef IgnorePointerCallback = Function(bool ignore);
 
 typedef CreateSliverRowBoxModel<T extends AnimatedSliverBoxModel> = T Function(
-    AnimatedSliverBoxState<T> sliverRowBoxContext);
+    AnimatedSliverBoxState<T> sliverRowBoxContext, Axis axis);
 
 typedef UpdateSliverRowBoxModel<T extends AnimatedSliverBoxModel> = Function(
-    T model);
+    T model, Axis axis);
 
 typedef BuildSliverBoxItem<Tag, P extends BoxItemProperties> = Widget Function(
     {Animation? animation,
@@ -55,13 +56,15 @@ class AnimatedSliverBox<T extends AnimatedSliverBoxModel>
   final CreateSliverRowBoxModel<T> createSliverRowBoxModel;
   final UpdateSliverRowBoxModel<T> updateSliverRowBoxModel;
   final IgnorePointerCallback? ignorePointerCallback;
+  final Axis axis;
 
   const AnimatedSliverBox(
       {Key? key,
       required this.controllerSliverRowBox,
       required this.createSliverRowBoxModel,
       required this.updateSliverRowBoxModel,
-      this.ignorePointerCallback})
+      this.ignorePointerCallback,
+      this.axis = Axis.vertical})
       : super(key: key);
 
   @override
@@ -82,7 +85,7 @@ class AnimatedSliverBoxState<T extends AnimatedSliverBoxModel>
   void initState() {
     _controllerSliverRowBox = widget.controllerSliverRowBox;
     model = _controllerSliverRowBox.addModel(
-        model: widget.createSliverRowBoxModel(this));
+        model: widget.createSliverRowBoxModel(this, widget.axis));
     super.initState();
   }
 
@@ -93,7 +96,7 @@ class AnimatedSliverBoxState<T extends AnimatedSliverBoxModel>
 
   @override
   void didUpdateWidget(AnimatedSliverBox<T> oldWidget) {
-    widget.updateSliverRowBoxModel(model);
+    widget.updateSliverRowBoxModel(model, widget.axis);
     super.didUpdateWidget(oldWidget);
   }
 
@@ -170,13 +173,11 @@ class _FlexSizeSliverChildDelegate extends SliverChildDelegate {
   }
 }
 
-class BoxItemProperties {
+abstract class BoxItemProperties {
   BoxItemTransitionState transitionStatus;
   bool single;
   String id;
-  double size;
   double measuredSize;
-  bool useSizeOfChild;
   bool animateOutside;
   bool innerTransition;
 
@@ -184,24 +185,42 @@ class BoxItemProperties {
     this.transitionStatus = BoxItemTransitionState.visible,
     this.single = false,
     required this.id,
-    required this.size,
     this.measuredSize = 0.0,
-    this.useSizeOfChild = false,
     this.animateOutside = false,
     this.innerTransition = false,
   });
 
-  double? get flexSize {
+  double? flexSize(Axis axis) {
     return (transitionStatus == BoxItemTransitionState.visible &&
-            !useSizeOfChild &&
+            useSizeOfChild(axis) &&
             !innerTransition)
-        ? size
+        ? size(axis)
         : null;
   }
+
+  bool useSizeOfChild(Axis axis);
+
+  double size(Axis axis);
 
   void setTransition(BoxItemTransitionState transitionState, bool outside) {
     transitionStatus = transitionState;
   }
 
-  void garbageCollected() {}
+  void garbageCollected(Axis axis) {}
+}
+
+class DefaultBoxItemProperties extends BoxItemProperties {
+  final double _size;
+
+  DefaultBoxItemProperties(
+      {required super.id, required double size, super.animateOutside = false})
+      : _size = size;
+
+  @override
+  double size(Axis axis) {
+    return _size;
+  }
+
+  @override
+  bool useSizeOfChild(Axis axis) => false;
 }

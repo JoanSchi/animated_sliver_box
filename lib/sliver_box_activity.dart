@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,7 +19,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'animated_sliver_box.dart';
-import 'sliver_row_box_model.dart';
+import 'animated_sliver_box_model.dart';
 
 abstract class SliverBoxActivity {
   const SliverBoxActivity();
@@ -102,7 +102,8 @@ class AnimatedSliverBoxActivity extends SliverBoxActivity {
       BoxItemProperties state = list[i];
 
       if (state.transitionStatus == BoxItemTransitionState.insertLater ||
-          state.transitionStatus == BoxItemTransitionState.insert) {
+          state.transitionStatus == BoxItemTransitionState.insert ||
+          state.transitionStatus == BoxItemTransitionState.insertFront) {
         state.transitionStatus = BoxItemTransitionState.visible;
         i++;
       } else if (!state.single &&
@@ -168,7 +169,8 @@ class OutsideSliverBoxActivity extends SliverBoxActivity {
       BoxItemProperties state = list[i];
 
       if (state.transitionStatus == BoxItemTransitionState.insertLater ||
-          state.transitionStatus == BoxItemTransitionState.insert) {
+          state.transitionStatus == BoxItemTransitionState.insert ||
+          state.transitionStatus == BoxItemTransitionState.insertFront) {
         state.transitionStatus = BoxItemTransitionState.visible;
         i++;
       } else if (!state.single &&

@@ -1,17 +1,17 @@
 // Copyright (C) 2023 Joan Schipper
-// 
+//
 // This file is part of animated_sliver_box.
-// 
+//
 // animated_sliver_box is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // animated_sliver_box is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -99,12 +99,10 @@ class _MyHomePageState extends State<MyHomePage>
       vsync: this,
       animationDuration: const Duration(milliseconds: 200));
 
-  bool useSwipe = false;
-
   @override
   Widget build(BuildContext context) {
     return ScrollConfiguration(
-        behavior: MyScrollBehavior(useSwipe),
+        behavior: const MyScrollBehavior(false),
         child: Scaffold(
           backgroundColor: const Color.fromARGB(255, 247, 250, 241),
           body: SafeArea(
@@ -147,72 +145,28 @@ class _MyHomePageState extends State<MyHomePage>
                     Expanded(
                       child: TabBarView(
                         controller: _tabController,
-                        children: [
+                        children: const [
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: EdgeInsets.all(8.0),
                             child: Center(
                               child: SizedBox(
                                 width: 900.0,
                                 child: ClipRRect(
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(36.0)),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(36.0)),
                                     child: CustomScrollView(
                                       slivers: [
-                                        if (defaultTargetPlatform !=
-                                                TargetPlatform.android &&
-                                            defaultTargetPlatform !=
-                                                TargetPlatform.iOS)
-                                          SliverToBoxAdapter(
-                                              child: Card(
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              32.0)),
-                                                  child: SizedBox(
-                                                      height: 120.0,
-                                                      child: Column(
-                                                        children: [
-                                                          const SizedBox(
-                                                            height: 16.0,
-                                                          ),
-                                                          const Center(
-                                                              child: Text(
-                                                            'Option',
-                                                            style: TextStyle(
-                                                                fontSize: 24.0),
-                                                          )),
-                                                          Row(
-                                                            children: [
-                                                              Checkbox(
-                                                                  value:
-                                                                      useSwipe,
-                                                                  onChanged:
-                                                                      (bool?
-                                                                          value) {
-                                                                    setState(
-                                                                        () {
-                                                                      useSwipe =
-                                                                          value ??
-                                                                              false;
-                                                                    });
-                                                                  }),
-                                                              const Text(
-                                                                  'use swipe/swing instead of scrollbar.')
-                                                            ],
-                                                          )
-                                                        ],
-                                                      )))),
-                                        const SliverToBoxAdapter(
+                                        SliverToBoxAdapter(
                                             child: SizedBox(
                                           height: 10.0,
                                         )),
-                                        const AnimalsAtoZ()
+                                        AnimalsAtoZ()
                                       ],
                                     )),
                               ),
                             ),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Center(
                                 child: SizedBox(width: 900.0, child: About())),
@@ -234,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage>
   }
 }
 
-class MyScrollBehavior extends MaterialScrollBehavior {
+class MyScrollBehavior extends MyMaterialScrollBehavior {
   final bool useSwipe;
 
   const MyScrollBehavior(this.useSwipe);
@@ -256,4 +210,76 @@ class MyScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.touch,
         PointerDeviceKind.mouse,
       };
+}
+
+class MyMaterialScrollBehavior extends ScrollBehavior {
+  const MyMaterialScrollBehavior();
+
+  @override
+  TargetPlatform getPlatform(BuildContext context) =>
+      Theme.of(context).platform;
+
+  @override
+  Widget buildScrollbar(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // When modifying this function, consider modifying the implementation in
+    // the base class ScrollBehavior as well.
+    switch (axisDirectionToAxis(details.direction)) {
+      case Axis.horizontal:
+      //Heel raar geen scrollbar
+      // return child;
+      case Axis.vertical:
+        switch (getPlatform(context)) {
+          case TargetPlatform.linux:
+          case TargetPlatform.macOS:
+          case TargetPlatform.windows:
+            return Scrollbar(
+              controller: details.controller,
+              child: child,
+            );
+          case TargetPlatform.android:
+          case TargetPlatform.fuchsia:
+          case TargetPlatform.iOS:
+            return child;
+        }
+    }
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // When modifying this function, consider modifying the implementation in
+    // the base class ScrollBehavior as well.
+    late final AndroidOverscrollIndicator indicator;
+    if (Theme.of(context).useMaterial3) {
+      indicator = AndroidOverscrollIndicator.stretch;
+    } else {
+      indicator = AndroidOverscrollIndicator.glow;
+    }
+    switch (getPlatform(context)) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return child;
+      case TargetPlatform.android:
+        switch (indicator) {
+          case AndroidOverscrollIndicator.stretch:
+            return StretchingOverscrollIndicator(
+              axisDirection: details.direction,
+              clipBehavior: details.clipBehavior ?? Clip.hardEdge,
+              child: child,
+            );
+          case AndroidOverscrollIndicator.glow:
+            continue glow;
+        }
+      glow:
+      case TargetPlatform.fuchsia:
+        return GlowingOverscrollIndicator(
+          axisDirection: details.direction,
+          color: Theme.of(context).colorScheme.secondary,
+          child: child,
+        );
+    }
+  }
 }
