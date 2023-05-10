@@ -86,6 +86,14 @@ class AnimalSliverBoxProperties extends BoxItemProperties {
 
   @override
   bool useSizeOfChild(Axis axis) => true;
+
+  @override
+  void setMeasuredSize(Axis axis, double size) {
+    // TODO: implement setMeasuredSize
+  }
+
+  @override
+  double suggestedSize(Axis axis) => size(axis);
 }
 
 class AnimalSuggestionSliverBoxProperties extends BoxItemProperties {
@@ -100,10 +108,16 @@ class AnimalSuggestionSliverBoxProperties extends BoxItemProperties {
   }) : _size = size;
 
   @override
-  double size(Axis axis) {
-    return _size;
-  }
+  double size(Axis axis) => _size;
 
   @override
   bool useSizeOfChild(Axis axis) => true;
+
+  @override
+  void setMeasuredSize(Axis axis, double size) {}
+
+  @override
+  double suggestedSize(Axis axis) {
+    return _size;
+  }
 }

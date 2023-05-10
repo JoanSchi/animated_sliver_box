@@ -278,7 +278,7 @@ abstract class AnimatedSliverBoxModel<Tag> {
       int i = 0;
       while (i < count) {
         final item = list[i];
-        final itemSize = item.size(axis);
+        final itemSize = item.suggestedSize(axis);
         bool removed = false;
 
         if (searchFirstVisual) {
@@ -297,7 +297,8 @@ abstract class AnimatedSliverBoxModel<Tag> {
               {
                 if (virtualOffset + insertEnd < viewportSize) {
                   insertEnd += itemSize;
-                  newLengthToVisual++;
+
+                  // newLengthToVisual++;
                 } else {
                   item.transitionStatus = BoxItemTransitionState.insertLater;
                 }

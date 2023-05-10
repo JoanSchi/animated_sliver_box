@@ -5,7 +5,7 @@ import 'some_colors.dart';
 
 const initialNormalHeight = 100.0;
 const initialNormalWidth = 200.0;
-const itemEditHeight = 475.0;
+const itemEditHeight = 500.0;
 const itemEditWidth = 400.0;
 const horizontalHeight = 440.0;
 
@@ -31,6 +31,8 @@ class ResizableItemsSliverBoxProperties extends BoxItemProperties {
   double height;
   bool aliveOutsideView;
 
+  double measureHeight;
+
   ResizableItemsSliverBoxProperties({
     super.transitionStatus = BoxItemTransitionState.visible,
     required super.id,
@@ -42,7 +44,8 @@ class ResizableItemsSliverBoxProperties extends BoxItemProperties {
     required this.normalHeight,
     this.aliveOutsideView = false,
   })  : width = normalWidth,
-        height = normalHeight;
+        height = normalHeight,
+        measureHeight = itemEditHeight;
 
   fixPanel() {
     final to = toPanel;
@@ -99,5 +102,21 @@ class ResizableItemsSliverBoxProperties extends BoxItemProperties {
   @override
   bool useSizeOfChild(Axis axis) {
     return axis == Axis.vertical ? panel == PanelSimpleItem.normal : true;
+  }
+
+  @override
+  double suggestedSize(Axis axis) {
+    if (axis == Axis.vertical) {
+      return panel == PanelSimpleItem.normal ? height : measureHeight;
+    } else {
+      return panel == PanelSimpleItem.normal ? width : itemEditWidth;
+    }
+  }
+
+  @override
+  void setMeasuredSize(Axis axis, double size) {
+    if (axis == Axis.vertical) {
+      measureHeight = size;
+    }
   }
 }

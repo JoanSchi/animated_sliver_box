@@ -2,6 +2,7 @@ import 'package:animated_sliver_box/animated_sliver_box.dart';
 import 'package:animated_sliver_box/animated_sliver_box_model.dart';
 import 'package:animated_sliver_box/sliver_box_controller.dart';
 import 'package:example_resize_animated_sliver_box/box_properties.dart';
+import 'package:flutter/rendering.dart';
 
 class ResizableItemsSliverBoxModel extends AnimatedSliverBoxModel<String> {
   ResizableItemsSliverBoxModel({
@@ -30,5 +31,17 @@ class ResizableItemsSliverBoxModel extends AnimatedSliverBoxModel<String> {
   @override
   void disposeSingleModel(SingleBoxModel singleBoxModel) {
     singleModels.remove(singleBoxModel);
+  }
+
+  @override
+  double? estimateMaxScrollOffset(
+    int firstIndex,
+    int lastIndex,
+    double leadingScrollOffset,
+    double trailingScrollOffset,
+  ) {
+    return trailingScrollOffset +
+        (length - lastIndex - 1) *
+            (axis == Axis.vertical ? initialNormalHeight : initialNormalWidth);
   }
 }

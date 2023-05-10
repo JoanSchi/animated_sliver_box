@@ -85,7 +85,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
   ) {
     box.layout(layoutBoxTracker.childConstraints, parentUsesSize: true);
     double flexSize = flexSizeChild(box);
-    boxItemProperties.measuredSize = flexSize;
+    boxItemProperties.setMeasuredSize(constraints.axis, flexSize);
 
     final childParentData = box.parentData! as FlexSizeSliverParentData;
 
@@ -108,7 +108,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
 
     if (flexSize != null && layoutBoxTracker.skipChild(flexSize)) {
       layoutBoxTracker.setSize(flexSize);
-      boxItemProperties.measuredSize = flexSize;
+      boxItemProperties.setMeasuredSize(constraints.axis, flexSize);
       box = before ?? after;
 
       // final childParentData =
@@ -128,7 +128,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
 
     if (box != null) {
       flexSize = flexSizeChild(box);
-      boxItemProperties.measuredSize = flexSize;
+      boxItemProperties.setMeasuredSize(constraints.axis, flexSize);
 
       final childParentData = box.parentData! as FlexSizeSliverParentData;
 
@@ -250,8 +250,13 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
 
       final newScrollOffset = leading.start + firstVisual!.overflow;
 
+      // If the leading index = 0, the check is ignored because this may be a replacement.
+      // With a replacement the newLengthToVisual is not counted therefore the newLengthToVisual will be 1 and the index will be 0.
+      // This is done, to prevent a swift caused by a delayed animation which cause a measured size bigger than 0.0.
       assert(
-          firstVisual!.boxItemProperties == model.getProperties(leading.index),
+          leading.index == 0 ||
+              firstVisual!.boxItemProperties ==
+                  model.getProperties(leading.index),
           'SliverboxItemProperties komt niet overeen leading index: ${leading.index}, id firstVisual: ${firstVisual?.boxItemProperties?.id} id getProperties: ${model.getProperties(leading.index).id}, '
           'New length FirstVisual: ${firstVisual?.newLengthToVisual},  oldIndex: ${firstVisual?.index}');
 

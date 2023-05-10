@@ -177,7 +177,6 @@ abstract class BoxItemProperties {
   BoxItemTransitionState transitionStatus;
   bool single;
   String id;
-  double measuredSize;
   bool animateOutside;
   bool innerTransition;
 
@@ -185,7 +184,6 @@ abstract class BoxItemProperties {
     this.transitionStatus = BoxItemTransitionState.visible,
     this.single = false,
     required this.id,
-    this.measuredSize = 0.0,
     this.animateOutside = false,
     this.innerTransition = false,
   });
@@ -202,6 +200,10 @@ abstract class BoxItemProperties {
 
   double size(Axis axis);
 
+  void setMeasuredSize(Axis axis, double size);
+
+  double suggestedSize(Axis axis);
+
   void setTransition(BoxItemTransitionState transitionState, bool outside) {
     transitionStatus = transitionState;
   }
@@ -211,16 +213,25 @@ abstract class BoxItemProperties {
 
 class DefaultBoxItemProperties extends BoxItemProperties {
   final double _size;
+  double _measuredSize;
 
   DefaultBoxItemProperties(
       {required super.id, required double size, super.animateOutside = false})
-      : _size = size;
+      : _size = size,
+        _measuredSize = size;
 
   @override
-  double size(Axis axis) {
-    return _size;
-  }
+  double size(Axis axis) => _size;
 
   @override
   bool useSizeOfChild(Axis axis) => false;
+
+  @override
+  double suggestedSize(Axis axis) =>
+      useSizeOfChild(axis) ? _measuredSize : _size;
+
+  @override
+  void setMeasuredSize(Axis axis, double size) {
+    _measuredSize = size;
+  }
 }

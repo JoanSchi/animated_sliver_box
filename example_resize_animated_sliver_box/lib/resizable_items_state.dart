@@ -97,15 +97,8 @@ class ResizableItemsNotifier extends StateNotifier<ResizableListState> {
       final single =
           SingleBoxModel(tag: 'panel_$index', items: state.panelsList[index]);
 
-      //   ..changeGroups(changeSingleBoxModels: [
-      //     ChangeSingleModel(single, (list) {
-      //       for (var property in list) {
-      //         property.transitionStatus = BoxItemTransitionState.insertFront;
-      //       }
-      //     }, SliverBoxAction.appear)
-      //   ], checkAllGroups: false);
-
       var feedback = model.changeGroups(
+          animateInsertDeleteAbove: false,
           changeSingleBoxModels: [
             ChangeSingleModel(single, (list) {
               for (var properties in list) {
