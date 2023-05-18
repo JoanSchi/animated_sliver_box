@@ -343,6 +343,7 @@ class Animal extends StatelessWidget {
                         }
                         return Colors.white;
                       }),
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
                       checkColor: properties.value.color,
                       shape: const CircleBorder(),
                       value: properties.value.selected,
@@ -449,6 +450,8 @@ class _EditAnimalState extends ConsumerState<EditAnimal> {
                                         }
                                         return Colors.white;
                                       }),
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.padded,
                                       checkColor: widget.properties.value.color,
                                       shape: const CircleBorder(),
                                       value: widget.properties.value.selected,

@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with animated_sliver_box.  If not, see <http://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'animated_sliver_box.dart';
@@ -51,7 +53,7 @@ abstract class AnimatedSliverBoxModel<Tag> {
   AnimatedSliverBoxState? sliverBoxContext;
   final Animatable<double> animatable;
   Axis axis;
-
+  double animationAfterLayout = 0.0;
   Duration duration;
 
   AnimatedSliverBoxModel(
@@ -121,8 +123,7 @@ abstract class AnimatedSliverBoxModel<Tag> {
       final Function(
         List<BoxItemProperties> list,
         Tag tag,
-      )?
-          changeGroupModelProperties,
+      )? changeGroupModelProperties,
       bool individual = false,
       required bool checkAllGroups,
       SliverBoxAction groupModelAction = SliverBoxAction.none,
@@ -473,17 +474,9 @@ abstract class AnimatedSliverBoxModel<Tag> {
       }
     }
 
-    if (correct != 0.0 && sliverBoxContext != null) {
-      final position = Scrollable.of(sliverBoxContext!.context).position;
-
-      position.correctBy(correct);
-
-      if (animateInsertDeleteAbove) {
-        position.animateTo(position.pixels + (correct > 0.0 ? -30 : 30),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut);
-      }
-    }
+    animationAfterLayout = animateInsertDeleteAbove && correct != 0.0
+        ? (correct < 0.0 ? 30 : -30)
+        : 0.0;
   }
 
   void disposeSingleModel(SingleBoxModel singleBoxModel);
@@ -551,6 +544,30 @@ abstract class AnimatedSliverBoxModel<Tag> {
         as FlexSizeRenderSliverList?;
 
     return r?.firstVisual;
+  }
+
+  void animateDelta(double delta) {
+    final context = sliverBoxContext?.context;
+    if (context != null) {
+      final position = Scrollable.of(context).position;
+      position.animateTo(position.pixels + delta,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
+  // Animation for the correction can only be scheduled after the scrollOffsetCorrection with SliverGeometry is performed.
+  // The scheduleCorrect is called in the layout.
+  //
+  //
+
+  void scheduleAnimationAfterLayout() {
+    final delta = animationAfterLayout;
+    if (delta != 0.0) {
+      scheduleMicrotask(() {
+        animateDelta(delta);
+      });
+    }
+    animationAfterLayout = 0.0;
   }
 }
 

@@ -33,7 +33,6 @@ class ForwardTracker extends FlexSizeLayoutTracker {
     super.findIndex = false,
     required super.childConstraints,
     required this.length,
-    int? earlierIndex,
     super.leading,
     super.trailing,
     super.firstVisual,
@@ -136,6 +135,8 @@ class ForwardTracker extends FlexSizeLayoutTracker {
     if (match) {
       visual
         ..index = index
+        ..start = start
+        ..end = end
         ..overflow = visualScrollOffset - start
         ..boxItemProperties = boxItemProperties;
     }
@@ -272,6 +273,8 @@ class BackwardTracker extends FlexSizeLayoutTracker {
     if (match) {
       visual
         ..index = index
+        ..start = start
+        ..end = end
         ..overflow = visualScrollOffset - start
         ..boxItemProperties = boxItemProperties;
     }
@@ -431,15 +434,21 @@ class FirstVisual {
   BoxItemProperties? boxItemProperties;
   int index;
   double overflow;
+  double start;
+  double end;
   int newLengthToVisual = -1;
 
   FirstVisual.empty()
-      : index = -1,
+      : start = 0.0,
+        end = 0.0,
+        index = -1,
         overflow = 0.0;
 
   FirstVisual({
     required this.boxItemProperties,
     required this.index,
+    required this.start,
+    required this.end,
     required this.overflow,
   });
 
@@ -453,4 +462,6 @@ class FirstVisual {
   bool isIndexGreater(int i) {
     return i > index;
   }
+
+  double get deltaOverlowToEnd => end - start - overflow;
 }

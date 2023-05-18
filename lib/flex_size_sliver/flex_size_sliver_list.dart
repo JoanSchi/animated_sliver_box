@@ -229,7 +229,6 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
         renderBox: firstChild,
         forward: true,
         findIndex: true,
-        earlierIndex: 0,
         scrollOffset: scrollOffset,
         visualScrollOffset: visualScrollOffset,
         targetEndScrollOffset: targetEndScrollOffset,
@@ -242,14 +241,18 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
       FlexSizeSliverParentData childParent =
           firstChild!.parentData as FlexSizeSliverParentData;
 
-      // assert(indexOf(firstChild!) == leading.index,
-      //     'FirstVisuable index is different leading index ${leading.index} and child ${indexOf(firstChild!)}');
+      assert(indexOf(firstChild!) == leading.index,
+          'FirstVisuable index is different leading index ${leading.index} and child ${indexOf(firstChild!)}');
 
       assert(childParent.layoutOffset != null,
           'FirstVisuable layoutOffset first offset is null');
 
-      final newScrollOffset = leading.start + firstVisual!.overflow;
+      assert(childParent.layoutOffset == leading.start,
+          'FirstVisuable layoutOffset first offset is ${childParent.layoutOffset} and leading start ${leading.start}');
 
+      final newScrollOffset = leading.start + firstVisual!.overflow;
+      debugPrint(
+          'leading.start ${leading.start} visualScrollOffset $visualScrollOffset overflow ${firstVisual!.overflow} ${firstVisual!.boxItemProperties!.id}');
       // If the leading index = 0, the check is ignored because this may be a replacement.
       // With a replacement the newLengthToVisual is not counted therefore the newLengthToVisual will be 1 and the index will be 0.
       // This is done, to prevent a swift caused by a delayed animation which cause a measured size bigger than 0.0.
@@ -267,6 +270,7 @@ class FlexSizeRenderSliverList extends FlexSizeRenderSliverMultiBoxAdaptor {
         geometry = SliverGeometry(
             scrollOffsetCorrection: -visualScrollOffset + newScrollOffset);
 
+        model.scheduleAnimationAfterLayout();
         return;
       } else {
         debugPrint('Nothing changed!');
